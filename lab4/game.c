@@ -5,7 +5,7 @@
 
 #define chunksize 2
 #define minN 1
-#define maxN 5
+#define maxN 10
 #define N (maxN - minN + 1)
 #define SIZE 10
 
@@ -17,13 +17,16 @@ int main() {
 
 #pragma omp parallel for schedule(static, chunksize)
     for (int i = 0; i < SIZE; i++) {
-        srand(time(NULL) ^ i ^ omp_get_thread_num());
+        srand(time(NULL) ^ i);
         int r = rand() % (N) + minN;
         digits[i] = r;
     }
 
     int count[maxN + 1] = {0};
-    for (int i = 0; i < SIZE; i++) count[digits[i]]++;
+#pragma omp parallel for shared(count)
+    for (int i = 0; i < SIZE; i++)
+#pragma omp atomic
+        count[digits[i]]++;
 
     for (int i = 0; i < SIZE; i++) printf("%i ", digits[i]);
     printf("\n");
