@@ -15,7 +15,7 @@
 #define SHIFT_DEP 2
 #define DISP 1
 // Set to a small value so we get more collisions
-#define MAX_PRIME 10
+#define PRIME_RANGE 10
 #define REPEAT 10
 
 /**
@@ -71,27 +71,27 @@ int main(int argc, char *argv[]) {
     MPI_Dims_create(size, ndims, dims);
     if (my_rank == 0)
         printf(
-            "Root Rank: %d. Comm Size: %d: Grid Dimension =[%d x %d] \n",
+            "Root Rank: %d. Comm Size: %d: Grid Dimension =[%d x %d x %d] \n",
             my_rank,
             size,
             dims[0],
-            dims[1]);
+            dims[1],
+            dims[2]);
     /* create cartesian mapping */
     wrap_around[0] = wrap_around[1] = wrap_around[2] = 0; /* periodic shift is.false. */
     reorder = 1;
     ierr = 0;
     ierr = MPI_Cart_create(MPI_COMM_WORLD, ndims, dims, wrap_around, reorder, &comm3D);
     if (ierr != 0) printf("ERROR[%d] creating CART\n", ierr);
+
     /* find my coordinates in the cartesian communicator group */
     MPI_Cart_coords(comm3D, my_rank, ndims, coord);
+
     /* use my cartesian coordinates to find my rank in cartesian
     group*/
     MPI_Cart_rank(comm3D, coord, &my_cart_rank);
+
     /* get my neighbors; axis is coordinate dimension of shift */
-    /* axis=0 ==> shift along the rows: P[my_row-1]: P[me] :
-    P[my_row+1] */
-    /* axis=1 ==> shift along the columns P[my_col-1]: P[me] :
-    P[my_col+1] */
     MPI_Cart_shift(comm3D, SHIFT_ROW, DISP, &nbr_i_lo, &nbr_i_hi);
     MPI_Cart_shift(comm3D, SHIFT_COL, DISP, &nbr_j_lo, &nbr_j_hi);
     MPI_Cart_shift(comm3D, SHIFT_DEP, DISP, &nbr_k_lo, &nbr_k_hi);
@@ -103,13 +103,14 @@ int main(int argc, char *argv[]) {
     FILE *fid = fopen(filename, "w");
 
     // Seed rng
+    // xor to reduce collisions based on time e.g. time = 10 will collide with time = 8 + 2 rank
     srand((time(NULL) ^ 6700417) + my_rank);
 
     for (int i = 0; i < REPEAT; i++) {
         // Find a prime
         int randomPrime;
         while (1) {
-            randomPrime = (rand() % MAX_PRIME) + 2;
+            randomPrime = (rand() % PRIME_RANGE) + 2;  // +2 to skip { 0, 1 }
             if (is_prime(randomPrime)) break;
         }
 

@@ -53,11 +53,12 @@ int main(int argc, char *argv[]) {
     MPI_Dims_create(size, ndims, dims);
     if (my_rank == 0)
         printf(
-            "Root Rank: %d. Comm Size: %d: Grid Dimension =[%d x %d] \n",
+            "Root Rank: %d. Comm Size: %d: Grid Dimension =[%d x %d x %d] \n",
             my_rank,
             size,
             dims[0],
-            dims[1]);
+            dims[1],
+            dims[2]);
     /* create cartesian mapping */
     wrap_around[0] = wrap_around[1] = wrap_around[2] = 0; /* periodic shift is.false. */
     reorder = 1;
@@ -66,17 +67,17 @@ int main(int argc, char *argv[]) {
     if (ierr != 0) printf("ERROR[%d] creating CART\n", ierr);
     /* find my coordinates in the cartesian communicator group */
     MPI_Cart_coords(comm3D, my_rank, ndims, coord);
+
     /* use my cartesian coordinates to find my rank in cartesian
     group*/
     MPI_Cart_rank(comm3D, coord, &my_cart_rank);
+
     /* get my neighbors; axis is coordinate dimension of shift */
-    /* axis=0 ==> shift along the rows: P[my_row-1]: P[me] :
-    P[my_row+1] */
-    /* axis=1 ==> shift along the columns P[my_col-1]: P[me] :
-    P[my_col+1] */
     MPI_Cart_shift(comm3D, SHIFT_ROW, DISP, &nbr_i_lo, &nbr_i_hi);
     MPI_Cart_shift(comm3D, SHIFT_COL, DISP, &nbr_j_lo, &nbr_j_hi);
     MPI_Cart_shift(comm3D, SHIFT_DEP, DISP, &nbr_k_lo, &nbr_k_hi);
+
+    // Print out neighbours, ordered to match the diagram
     printf(
         "Global rank: %d. Cart rank: %d. Coord: (%d, %d, %d).Left:% d.Right:% d.Top:% d.Bottom:% "
         "d.Front:% d.Back% d\n ",
@@ -91,6 +92,7 @@ int main(int argc, char *argv[]) {
         nbr_i_hi,
         nbr_j_hi,
         nbr_j_lo);
+
     fflush(stdout);
     MPI_Comm_free(&comm3D);
     MPI_Finalize();

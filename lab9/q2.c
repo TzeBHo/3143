@@ -14,7 +14,7 @@
 #define SHIFT_COL 1
 #define DISP 1
 // Set to a small value so we get more collisions
-#define MAX_PRIME 10
+#define PRIME_RANGE 10
 #define REPEAT 10
 
 /**
@@ -95,19 +95,21 @@ int main(int argc, char *argv[]) {
     MPI_Cart_shift(comm2D, SHIFT_COL, DISP, &nbr_j_lo, &nbr_j_hi);
 
     /* Process communication */
+
     // Open file
     char filename[16];
     sprintf(filename, "%02d.out", my_rank);
     FILE *fid = fopen(filename, "w");
 
     // Seed rng
+    // xor to reduce collisions based on time e.g. time = 10 will collide with time = 8 + 2 rank
     srand((time(NULL) ^ 6700417) + my_rank);
 
     for (int i = 0; i < REPEAT; i++) {
         // Find a prime
         int randomPrime;
         while (1) {
-            randomPrime = (rand() % MAX_PRIME) + 2;
+            randomPrime = (rand() % PRIME_RANGE) + 2;  // +2 to skip { 0, 1 }
             if (is_prime(randomPrime)) break;
         }
 
