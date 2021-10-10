@@ -1,3 +1,5 @@
 #include <mpi.h>
 
-void startStation();
+#include "include/reading.h"
+
+void startStation(reading_t** queue, MPI_Comm station_comm);

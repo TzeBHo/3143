@@ -1,3 +1,5 @@
 #include <mpi.h>
 
-void startSatellite();
+#include "include/reading.h"
+
+void startSatellite(reading_t** queue);

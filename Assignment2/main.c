@@ -18,6 +18,8 @@ int main(int argc, char** argv) {
 
     int size, rank;
 
+    MPI_Comm nodes_comm, station_comm;
+
     /* Start up initial MPI environment */
 
     MPI_Init(&argc, &argv);
@@ -27,26 +29,17 @@ int main(int argc, char** argv) {
     if (rank == 0) {
         /* Allocate queue */
 
-        reading_t* r;
-
         readings = q_create(QUEUE_SIZE);
-
-        r = create_reading(0, 0, 1000);
-        q_push(readings, r_count++, QUEUE_SIZE, r);
-        r = create_reading(0, 1, 2000);
-        q_push(readings, r_count++, QUEUE_SIZE, r);
-        r = create_reading(0, 2, 3000);
-        q_push(readings, r_count++, QUEUE_SIZE, r);
-
-        q_print(readings, r_count);
 
         /* Main process is the station */
 
         printf("Root initialised\n");
+        startStation(readings, station_comm);
     } else {
         /* All other processes are nodes */
 
         printf("Node %d initialised\n", rank);
+        startNode(readings, rank, nodes_comm);
     }
 
     /* Clean up */

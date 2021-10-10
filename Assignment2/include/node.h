@@ -1,3 +1,5 @@
 #include <mpi.h>
 
-void startNode();
+#include "include/reading.h"
+
+void startNode(reading_t** queue, int rank, MPI_Comm nodes_comm);
